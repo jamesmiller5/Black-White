@@ -80,8 +80,13 @@
             lineStyle: { width: pathWidth, color: pathLineColor },
             fillStyle: { color: pathFillColor }
         });
-        path = new Phaser.Curves.Path();
-        path.add(new Phaser.Curves.Ellipse(400, 300, 300, 200));
+        path = new Phaser.Curves.Path(600, 400);
+        path.splineTo([ 200, 400, 300, 550, 400, 450, 500, 550]);
+        path.lineTo(700, 300);
+        path.lineTo(600, 350);
+        path.ellipseTo(200, 100, 100, 200, false, 0);
+        path.cubicBezierTo(222, 119, 308, 107, 208, 368);
+        path.ellipseTo(60, 60, 0, 360, true);
 
         // Follower
         follower = { t: 0, vec: new Phaser.Math.Vector2() };
