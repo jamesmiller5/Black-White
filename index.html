@@ -35,6 +35,9 @@
 
     var game = new Phaser.Game(config);
 
+    // Input
+    var mouseX=0;
+    var mouseY=0;
     // Sizes
     var pathWidth = 8;
     var followerSize = pathWidth * 2;
@@ -50,11 +53,32 @@
     // Game objects
     var stars;
     var follower;
+    var towers;
 
     function preload ()
     {
         this.load.image('star', 'assets/star.png');
+        this.load.image('tower', 'assets/tower.png');
     }
+
+    var Tower = new Phaser.Class({
+
+        Extends: Phaser.Physics.Arcade.Sprite,
+
+        initialize: function Tower (scene, x, y)
+        {
+            Phaser.Physics.Arcade.Sprite.call(this, scene, x, y, 'tower');
+            this.setPosition(x, y);
+        },
+
+        preUpdate: function (time, delta)
+        {
+            this.anims.update(time, delta);
+
+            // TODO find closest star
+            this.setAngle(this.angle + 0.25 * delta);
+        }
+    });
 
     var PathFollower = new Phaser.Class({
 
@@ -101,6 +125,17 @@
 
     function create ()
     {
+        this.input.on('pointermove', function (pointer) {
+            mouseX=pointer.x;
+            mouseY=pointer.y;
+        });
+
+        this.input.on('pointerdown', function (pointer) {
+            console.log('down');
+            towers.add(new Tower(this, pointer.x, pointer.y), true);
+        }, this);
+
+
         // White Half
         wGraphics = this.add.graphics({
             lineStyle: { width: 2, color: 0xFFFFFF },
@@ -151,12 +186,15 @@
         // using physics group
         stars = this.physics.add.group({ allowGravity: false });
 
-        for(var i = 0; i < 20 ; i++ ) {
+        for(var i = 0; i < 20; i++ ) {
             var pf = new PathFollower(this, 0, 0, path, 0.003)
             pf.setActive(false)
             pf.setVisible(false)
             stars.add(pf, true);
         }
+
+        // Towers
+        towers = this.physics.add.group({ allowGravity: false });
     }
 
     function update ()
@@ -167,6 +205,8 @@
         pathGraphics.clear()
         path.draw(pathGraphics);
         pathGraphics.fillCircle(follower.vec.x, follower.vec.y, followerSize);
+
+        pathGraphics.fillCircle(mouseX, mouseY, 12);
 
         //  if stars reached path goal
         if( Phaser.Math.RND.integerInRange(0, 30) == 0 )
