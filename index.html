@@ -19,6 +19,7 @@
         type: Phaser.AUTO,
         width: 800,
         height: 600,
+        backgroundColor: '#808080',
         physics: {
             default: 'arcade',
             arcade: {
@@ -34,61 +35,95 @@
 
     var game = new Phaser.Game(config);
 
-    // Colors
-    var leftColor = 0x000000;
-    var rightColor = 0xFFFFFF;
-    var backgroundColor = 0x808080;
-    var pathLineColor = 0xd5dbdb;
-    var pathFillColor = 0xa6acaf;
     // Sizes
     var pathWidth = 8;
     var followerSize = pathWidth * 2;
     // Geometry
-    var leftRect;
-    var rightRect;
+    var bRect;
+    var wRect;
+    var left;
+    var right;
+    // Graphics
     var pathGraphics;
+    var bGraphics;
+    var wGraphics
     // Game objects
+    var stars;
     var follower;
 
     function preload ()
     {
-
+        this.load.image('star', 'assets/star.png');
     }
+
+    var PathFollower = new Phaser.Class({
+
+        Extends: Phaser.Physics.Arcade.Sprite,
+
+        initialize: function PathFollower (scene, x, y, path, speed)
+        {
+            Phaser.Physics.Arcade.Sprite.call(this, scene, x, y, 'star');
+
+            //  This is the path the sprite will follow
+            this.path = path
+            this.pathVector = new Phaser.Math.Vector2();
+            this.pathSpeed = speed;
+            this.pathIndex = 0;
+
+            this.path.getPoint(0, this.pathVector);
+
+            this.setPosition(this.pathVector.x, this.pathVector.y);
+        },
+
+        preUpdate: function (time, delta)
+        {
+            this.anims.update(time, delta);
+
+            this.setAngle(this.angle + 0.25 * delta);
+
+            this.path.getPoint(this.pathIndex, this.pathVector);
+
+            this.setPosition(this.pathVector.x, this.pathVector.y);
+
+            //this.pathIndex = Phaser.Math.Wrap(this.pathIndex + this.pathSpeed, 0, 1);
+            this.pathIndex = this.pathIndex + this.pathSpeed;
+
+            if(this.pathIndex > 1) {
+                this.setActive(false);
+                this.setVisible(false);
+                this.pathIndex = 0;
+                this.path.getPoint(0, this.pathVector);
+                this.setPosition(this.pathVector.x, this.pathVector.y);
+            }
+        }
+
+    });
 
     function create ()
     {
         // White Half
-        rightGraphics = this.add.graphics({
-            lineStyle: { width: 2, color: rightColor },
-            fillStyle: { color: rightColor }
+        wGraphics = this.add.graphics({
+            lineStyle: { width: 2, color: 0xFFFFFF },
+            fillStyle: { color: 0xFFFFFF }
         });
-        rightRect = new Phaser.Geom.Rectangle(401,0,400,600);
-        rightGraphics.clear();
-        rightGraphics.fillRectShape(rightRect);
+        wRect = new Phaser.Geom.Rectangle(401,0,400,600);
+        right = wRect;
+        wGraphics.fillRectShape(right);
 
         // Black Half
-        leftGraphics = this.add.graphics({
-            lineStyle: { width: 2, color: leftColor },
-            fillStyle: { color: leftColor }
+        bGraphics = this.add.graphics({
+            lineStyle: { width: 2, color: 0x000000 },
+            fillStyle: { color: 0x000000 }
         });
-        leftRect = new Phaser.Geom.Rectangle(0,0,400,600);
-        leftGraphics.clear();
-        leftGraphics.fillRectShape(leftRect);
+        bRect = new Phaser.Geom.Rectangle(0,0,400,600);
+        left = bRect;
+        bGraphics.fillRectShape(left);
 
-        // Path
         pathGraphics = this.add.graphics({
-            lineStyle: { width: pathWidth, color: pathLineColor },
-            fillStyle: { color: pathFillColor }
+            lineStyle: { width: pathWidth, color: 0xaa0000 },
+            fillStyle: { color: 0x00aa00 }
         });
-        path = new Phaser.Curves.Path(600, 400);
-        path.splineTo([ 200, 400, 300, 550, 400, 450, 500, 550]);
-        path.lineTo(700, 300);
-        path.lineTo(600, 350);
-        path.ellipseTo(200, 100, 100, 200, false, 0);
-        path.cubicBezierTo(222, 119, 308, 107, 208, 368);
-        path.ellipseTo(60, 60, 0, 360, true);
 
-        // Follower
         follower = { t: 0, vec: new Phaser.Math.Vector2() };
         this.tweens.add({
             targets: follower,
@@ -98,6 +133,30 @@
             yoyo: true,
             repeat: -1
         });
+
+        // Path
+        path = new Phaser.Curves.Path();
+
+        path.add( new Phaser.Curves.Line([ 32, 600, 32, 100 ]) );
+        path.ellipseTo(50, 50, 180, 270, false, 0);
+        path.lineTo(220, 50);
+        path.ellipseTo(50, 50, 270, 0, false, 0);
+        path.lineTo(270, 150);
+        path.ellipseTo(50, 50, 180, 90, true, 0);
+        path.lineTo(400, 200);
+        path.lineTo(700, 300);
+        path.lineTo(700, 600);
+
+        // Follower
+        // using physics group
+        stars = this.physics.add.group({ allowGravity: false });
+
+        for(var i = 0; i < 20 ; i++ ) {
+            var pf = new PathFollower(this, 0, 0, path, 0.003)
+            pf.setActive(false)
+            pf.setVisible(false)
+            stars.add(pf, true);
+        }
     }
 
     function update ()
@@ -108,6 +167,16 @@
         pathGraphics.clear()
         path.draw(pathGraphics);
         pathGraphics.fillCircle(follower.vec.x, follower.vec.y, followerSize);
+
+        //  if stars reached path goal
+        if( Phaser.Math.RND.integerInRange(0, 30) == 0 )
+        {
+            var dead = stars.getFirstDead(false);
+            if(dead) {
+                dead.setVisible(true);
+                dead.setActive(true);
+            }
+        }
     }
 </script>
 
