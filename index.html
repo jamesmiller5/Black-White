@@ -75,8 +75,35 @@
         {
             this.anims.update(time, delta);
 
-            // TODO find closest star
-            this.setAngle(this.angle + 0.25 * delta);
+            var starsArray = stars.getMatching('active', true);
+            var minDist = Phaser.Math.MAX_SAFE_INTEGER;
+            var closest = null;
+            for( var i in starsArray ) {
+                var dist = Phaser.Math.Distance.Between(starsArray[i].x, starsArray[i].y, this.x, this.y);
+                if( dist < minDist ) {
+                    closest = starsArray[i];
+                    minDist = dist
+                }
+            }
+
+            if( closest ) {
+                // rotate to face closest star
+                var angleDeg = Math.atan2(this.y - closest.y, this.x - closest.x) * 180 / Math.PI;
+
+                // rotate a certain speed towards closest star
+                var stepMax = 4;
+                if( angleDeg > this.angle ) {
+                    var step = Math.min( angleDeg - this.angle, stepMax );
+                    this.setAngle( this.angle + step );
+                } else if( angleDeg < this.angle ) {
+                    var step = Math.min( this.angle - angleDeg, stepMax );
+                    this.setAngle( this.angle - step );
+                }
+            } else {
+                // rotate in place
+                this.setAngle(this.angle + 0.25 * delta);
+            }
+
         }
     });
 
