@@ -36,6 +36,9 @@
     var bullets;
     // Game States
     var goalReached=0;
+    var hitCounter=0;
+    var spawnCounter=0;
+    var spawnMax=30;
 
     class PathFollower extends Phaser.Physics.Arcade.Sprite
     {
@@ -312,7 +315,7 @@
         // using physics group
         stars = this.physics.add.group({ allowGravity: false });
 
-        for(var i = 0; i < 20; i++ ) {
+        for(var i = 0; i < spawnMax; i++ ) {
             var pf = new PathFollower(this, 0, 0, path, 0.003)
             pf.setActive(false)
             pf.setVisible(false)
@@ -335,27 +338,39 @@
 
         pathGraphics.fillCircle(mouseX, mouseY, 12);
 
-        if( Phaser.Math.RND.integerInRange(0, 30) == 0 )
+        if( Phaser.Math.RND.integerInRange(0, 30) == 0 && spawnCounter <= spawnMax )
         {
             var dead = stars.getFirstDead(false);
             if(dead) {
                 dead.setVisible(true);
                 dead.setActive(true);
+                spawnCounter += 1;
             }
         }
 
         //  if stars reached path goal
         if( goalReached ) {
             alert("Game over");
-            goalReached=0;
-            this.scene.restart();
+            resetGame(this);
+        } else if( hitCounter >= spawnMax ) {
+            alert("Game Won!");
+            resetGame(this);
         }
+    }
+
+    function resetGame(g) {
+        goalReached=0;
+        hitCounter=0;
+        spawnCounter=0;
+        g.scene.restart();
     }
 
     function hit(bullet, star) {
         bullet.hit()
 
         star.hit()
+
+        hitCounter += 1;
     }
 
     var config = {
