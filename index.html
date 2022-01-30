@@ -76,6 +76,15 @@
             }
         }
 
+
+        hit ()
+        {
+            this.setVisible(false);
+            this.setActive(false);
+            this.pathIndex=0;
+            this.path.getPoint(0, this.pathVector);
+            this.setPosition(this.pathVector.x, this.pathVector.y);
+        }
     }
 
     class Tower extends Phaser.Physics.Arcade.Sprite
@@ -85,7 +94,7 @@
             super(scene, x, y, 'tower');
             this.setPosition(x, y);
             this.reload=1;
-            this.chargeRate=0.025;
+            this.chargeRate=0.015;
         }
 
         preUpdate (time, delta)
@@ -161,12 +170,21 @@
         {
             super.preUpdate(time, delta);
 
-            // TODO check if out of world bounds
             if (this.x < -32 || this.x > 832 || this.y < -32 || this.y > 632)
             {
                 this.setActive(false);
                 this.setVisible(false);
             }
+        }
+
+        hit()
+        {
+            this.setVelocity(0,0);
+            this.x = -32;
+            this.y = -32;
+            this.body.reset(this.x, this.y);
+            this.setVisible(false);
+            this.setActive(false);
         }
     }
 
@@ -269,6 +287,8 @@
         towers = this.physics.add.group({ allowGravity: false });
 
         bullets = new Bullets(this);
+
+        this.physics.add.overlap(bullets, stars, hit, null, this);
     }
 
     function update ()
@@ -288,6 +308,12 @@
                 dead.setActive(true);
             }
         }
+    }
+
+    function hit(bullet, star) {
+        bullet.hit()
+
+        star.hit()
     }
 
     var config = {
