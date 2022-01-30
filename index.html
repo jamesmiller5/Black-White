@@ -97,6 +97,15 @@
             this.chargeRate=0.015;
         }
 
+        setup (x,y)
+        {
+            this.setActive(true);
+            this.setVisible(true);
+            this.setPosition(x, y);
+            this.reload=1;
+            this.chargeRate=0.015;
+        }
+
         preUpdate (time, delta)
         {
             this.anims.update(time, delta);
@@ -145,7 +154,31 @@
         }
     }
 
-    // TODO Towers as group of towers
+    class Towers extends Phaser.Physics.Arcade.Group
+    {
+        constructor (scene)
+        {
+            super(scene.physics.world, scene);
+
+            this.createMultiple({
+                frameQuantity: 4,
+                key: 'tower',
+                active: false,
+                visible: false,
+                classType: Tower
+            });
+        }
+
+        createTower (x, y)
+        {
+            let tower = this.getFirstDead(false);
+
+            if (tower)
+            {
+                tower.setup(x, y);
+            }
+        }
+    }
 
     class Bullet extends Phaser.Physics.Arcade.Sprite
     {
@@ -232,7 +265,7 @@
 
         this.input.on('pointerdown', function (pointer) {
             console.log('down');
-            towers.add(new Tower(this, pointer.x, pointer.y), true);
+            towers.createTower(pointer.x, pointer.y);
         }, this);
 
 
@@ -255,8 +288,8 @@
         bGraphics.fillRectShape(left);
 
         pathGraphics = this.add.graphics({
-            lineStyle: { width: pathWidth, color: 0xaa0000 },
-            fillStyle: { color: 0x00aa00 }
+            lineStyle: { width: pathWidth, color: 0x66666 },
+            fillStyle: { color: 0x66666 }
         });
 
         // Path
@@ -284,7 +317,7 @@
         }
 
         // Towers
-        towers = this.physics.add.group({ allowGravity: false });
+        towers = new Towers(this);
 
         bullets = new Bullets(this);
 
