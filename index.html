@@ -34,6 +34,8 @@
     var stars;
     var towers;
     var bullets;
+    // Game States
+    var goalReached=0;
 
     class PathFollower extends Phaser.Physics.Arcade.Sprite
     {
@@ -68,6 +70,7 @@
             this.pathIndex = this.pathIndex + this.pathSpeed;
 
             if(this.pathIndex > 1) {
+                goalReached=1;
                 this.setActive(false);
                 this.setVisible(false);
                 this.pathIndex = 0;
@@ -332,7 +335,6 @@
 
         pathGraphics.fillCircle(mouseX, mouseY, 12);
 
-        //  if stars reached path goal
         if( Phaser.Math.RND.integerInRange(0, 30) == 0 )
         {
             var dead = stars.getFirstDead(false);
@@ -340,6 +342,13 @@
                 dead.setVisible(true);
                 dead.setActive(true);
             }
+        }
+
+        //  if stars reached path goal
+        if( goalReached ) {
+            alert("Game over");
+            goalReached=0;
+            this.scene.restart();
         }
     }
 
